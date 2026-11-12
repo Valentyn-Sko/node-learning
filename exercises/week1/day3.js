@@ -15,6 +15,7 @@ attempts раз с паузой. Протестируйте функцией, к
 */
 import { setTimeout as delay } from 'node:timers/promises';
 import assert from 'node:assert/strict';
+import {chunk} from '../utils/array.js'
 
 /* 1 */
 const fakeRequest = (name, ms) => (delay(ms).then(() => {
@@ -29,21 +30,25 @@ const end1 = performance.now();
 console.log(end1 - start1);
 
 const start2 = performance.now();
-const [a, b, c] = await Promise.all([fakeRequest('name 300', 300), fakeRequest('name 300', 500), fakeRequest('name 300', 700)]);
+const [a, b, c] = await Promise.all([fakeRequest('name 300', 300), fakeRequest('name 500', 500), fakeRequest('name 700', 700)]);
 const end2 = performance.now();
 console.log(end2 - start2);
 
+assert.ok(end1 - start1 >= 1500);
+assert.ok(end2 - start2 < 800);
+
 /* 2 */
 function withTimeout(promise, ms) {
+    let timeoutId;
     const timeout = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout')), ms);
+        timeoutId = setTimeout(() => reject(new Error('Timeout')), ms);
     });
 
-    return Promise.race([promise, timeout]);
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
 }
-withTimeout(fakeRequest('name 300', 300), 400).then(console.log).catch(console.error);
-withTimeout(fakeRequest('name 500', 500), 400).then(console.log).catch(console.error);
-withTimeout(fakeRequest('name 700', 700), 700).then(console.log).catch(console.error);
+await withTimeout(fakeRequest('name 300', 300), 400).then(console.log).catch(console.error);
+await withTimeout(fakeRequest('name 500', 500), 400).then(console.log).catch(console.error);
+await withTimeout(fakeRequest('name 700', 700), 700).then(console.log).catch(console.error);
 
 
 /* 3 */
@@ -55,6 +60,18 @@ const fakeRequest3Rd = async () => {
     console.log(`Attempt: ${counter}`);
 
     if (counter <= 2) {
+        throw new Error('Request failed');
+    }
+
+    return 'Success!';
+};
+
+const fakeRequest1St = async () => {
+    counter++;
+
+    console.log(`Attempt: ${counter}`);
+
+    if (counter > 1){
         throw new Error('Request failed');
     }
 
@@ -86,6 +103,10 @@ await assert.rejects(
     retry(fakeRequest3Rd, 2, 100),
     /Request failed/
 );
+assert.equal(counter, 2)
+counter = 0;
+const result1 = await retry(fakeRequest1St, 1, 100);
+assert.equal(result1, 'Success!');
 
 
 /* 4 */
@@ -132,3 +153,58 @@ sendAllNotifications();
 
 
 /* 6 */
+const items6th = [300, 500, 700, 200, 400];
+async function mapWithConcurrency(items, limit, fn) {
+    return chunk(items, limit)
+}
+
+const results = await mapWithConcurrency(
+  items6th,
+  2,                                             
+  (ms) => fakeRequest(`name ${ms}`, ms),
+);
+
+console.log(results)
+
+
+async function mapWithConcurrencyW(items, limit, fn) {
+    const results = new Array(items.length);
+    let index = 0;
+
+    async function worker() {
+        while (index < items.length) {
+            const currentIndex = index++;
+
+            results[currentIndex] = await fn(items[currentIndex], currentIndex);
+        }
+    }
+
+    const workers = Array.from(
+        { length: Math.min(limit, items.length) },
+        () => worker()
+    );
+
+    await Promise.all(workers);
+
+    return results;
+}
+
+let active = 0;
+let maxActive = 0;
+
+async function fakeRequestForW(item) {
+    active++;
+    maxActive = Math.max(maxActive, active);
+    console.log(`Start ${item}. Active: ${active}`);
+    await delay(1000);
+    active--;
+    console.log(`Finish ${item}. Active: ${active}`);
+    return `${item} done`;
+}
+
+const itemsW = [1, 2, 3, 4, 5, 6, 7];
+
+const resultW = await mapWithConcurrencyW(itemsW, 3, fakeRequestForW);
+
+console.log(resultW);
+console.log('Max concurrent:', maxActive);
