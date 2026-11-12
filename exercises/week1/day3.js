@@ -149,13 +149,21 @@ async function sendAllNotifications() {
     console.log(`доставлено: ${delivered}, ошибок: ${errors}`);
 }
 
-sendAllNotifications();
+await sendAllNotifications();
 
 
 /* 6 */
 const items6th = [300, 500, 700, 200, 400];
 async function mapWithConcurrency(items, limit, fn) {
-    return chunk(items, limit)
+    const chunkArr = chunk(items, limit);
+    const results = [];
+
+    for (const [index, batch] of chunkArr.entries()) {
+        results.push(...await Promise.all(batch.map(fn)));
+        console.log(`Batch ${index + 1} completed`);
+    }
+
+    return results;
 }
 
 const results = await mapWithConcurrency(
@@ -168,6 +176,9 @@ console.log(results)
 
 
 async function mapWithConcurrencyW(items, limit, fn) {
+     if (!Number.isInteger(limit) || limit <= 0) {
+        throw new RangeError(`limit должен быть целым числом > 0, получено: ${limit}`);
+    }
     const results = new Array(items.length);
     let index = 0;
 
@@ -196,7 +207,7 @@ async function fakeRequestForW(item) {
     active++;
     maxActive = Math.max(maxActive, active);
     console.log(`Start ${item}. Active: ${active}`);
-    await delay(1000);
+    await delay(Math.random() * 500);
     active--;
     console.log(`Finish ${item}. Active: ${active}`);
     return `${item} done`;
@@ -208,3 +219,7 @@ const resultW = await mapWithConcurrencyW(itemsW, 3, fakeRequestForW);
 
 console.log(resultW);
 console.log('Max concurrent:', maxActive);
+
+await assert.rejects(mapWithConcurrencyW([1, 2], 0, fakeRequestForW), RangeError);
+
+console.log('All done')
