@@ -48,10 +48,13 @@ console.log(findDuplicates(arr));
 
 assert.deepEqual(findDuplicates(arr), [1, 2, 4, 6]);
 assert.deepEqual(findDuplicates([]), []);
-assert.deepEqual(findDuplicates(arr).length, 4);
+assert.equal(findDuplicates(arr).length, 4);
 
 //chunk(arr, size) → chunk([1, 2, 3, 4, 5], 2) = [[1, 2], [3, 4], [5]](пригодится для батч-вставки в БД).
 function chunk(arr, size) {
+    if (!Number.isInteger(size) || size <= 0) {
+        throw new RangeError(`size должен быть целым числом > 0, получено: ${size}`);
+    }
     if (!size) {
         return [];
     }
@@ -66,6 +69,7 @@ function chunk(arr, size) {
     return res;
 }
 
+
 console.log(chunk(arr, 2));
 assert.deepEqual(chunk(arr, 2), [
   [ 1, 2 ],
@@ -77,21 +81,18 @@ assert.deepEqual(chunk(arr, 2), [
   [ 324, 112 ]
 ]);
 assert.deepEqual(chunk([], 5), []);
-assert.deepEqual(chunk([], 0), []);
+assert.throws(() => chunk([1], 0), RangeError);
+assert.throws(() => chunk([1, 2, 3], -1), RangeError)
 assert.deepEqual(chunk(arr, 2).length, 7);
 assert.deepEqual(chunk(arr, 3).length, 5);
+assert.deepEqual(chunk([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
 
 // countBy(arr, fn) → Map «ключ → количество».
-
-
-
 function countBy(arr, fn) {
-    if (!arr.length) {
-        return new Map();
-    }
     const resMap = new Map();
     for (const item of arr) {
-        resMap.set(fn(item), (resMap.get(fn(item)) ?? 0) + 1);
+        const key = fn(item)
+        resMap.set(key, (resMap.get(key) ?? 0) + 1);
     }
     return resMap;
 }
