@@ -55,9 +55,6 @@ function chunk(arr, size) {
     if (!Number.isInteger(size) || size <= 0) {
         throw new RangeError(`size должен быть целым числом > 0, получено: ${size}`);
     }
-    if (!size) {
-        return [];
-    }
     const res = arr.reduce((acc, item, index) => {
         const chunkIndex = Math.floor(index / size);
         if (!acc[chunkIndex]) {
@@ -83,8 +80,8 @@ assert.deepEqual(chunk(arr, 2), [
 assert.deepEqual(chunk([], 5), []);
 assert.throws(() => chunk([1], 0), RangeError);
 assert.throws(() => chunk([1, 2, 3], -1), RangeError)
-assert.deepEqual(chunk(arr, 2).length, 7);
-assert.deepEqual(chunk(arr, 3).length, 5);
+assert.equal(chunk(arr, 2).length, 7);
+assert.equal(chunk(arr, 3).length, 5);
 assert.deepEqual(chunk([1, 2, 3, 4, 5], 2), [[1, 2], [3, 4], [5]]);
 
 // countBy(arr, fn) → Map «ключ → количество».
@@ -100,7 +97,7 @@ function countBy(arr, fn) {
 console.log((countBy(orders, (order) => order.status)))
 assert.deepEqual(countBy(orders, (order) => order.status), new Map(Object.entries({new: 1, paid: 2})));
 assert.deepEqual(countBy([], (order) => order.status), new Map());
-assert.deepEqual([...countBy(orders, (order) => order.status)].length, 2);
+assert.equal([...countBy(orders, (order) => order.status)].length, 2);
 
 console.log(countBy(arr, (n) => (n % 2 === 0 ? 'even' : 'odd')));
 
@@ -131,7 +128,7 @@ assert.deepEqual(uniqueBy(users, 'email'), [
   { id: 2, email: 'bob@mail.com', name: 'Bob' }
 ]);
 assert.deepEqual(uniqueBy([], 'email'), []);
-assert.deepEqual(uniqueBy(users, 'email').length, 2);
+assert.equal(uniqueBy(users, 'email').length, 2);
 
 
 // pick(obj, keys) и omit(obj, keys) — без мутации исходного объекта.
