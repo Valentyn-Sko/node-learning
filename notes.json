@@ -1,0 +1,33 @@
+{
+  "nextId": 5,
+  "notes": [
+    {
+      "id": 1,
+      "text": "New Note",
+      "done": false,
+      "createdAt": "2026-11-14T14:08:59.049Z",
+      "updatedAt": "2026-11-14T14:08:59.053Z"
+    },
+    {
+      "id": 2,
+      "text": "T",
+      "done": false,
+      "createdAt": "2026-11-14T14:09:00.559Z",
+      "updatedAt": "2026-11-14T14:09:00.560Z"
+    },
+    {
+      "id": 3,
+      "text": "T",
+      "done": false,
+      "createdAt": "2026-11-14T14:09:01.967Z",
+      "updatedAt": "2026-11-14T14:09:01.967Z"
+    },
+    {
+      "id": 4,
+      "text": "T",
+      "done": false,
+      "createdAt": "2026-11-14T14:09:03.045Z",
+      "updatedAt": "2026-11-14T14:09:03.046Z"
+    }
+  ]
+}

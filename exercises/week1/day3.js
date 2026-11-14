@@ -223,3 +223,8 @@ console.log('Max concurrent:', maxActive);
 await assert.rejects(mapWithConcurrencyW([1, 2], 0, fakeRequestForW), RangeError);
 
 console.log('All done')
+
+console.log('A');
+setTimeout(() => console.log('B'), 0);
+Promise.resolve().then(() => console.log('C'));
+console.log('D');
