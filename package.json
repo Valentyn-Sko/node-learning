@@ -17,5 +17,9 @@
   "bugs": {
     "url": "https://github.com/Valentyn-Sko/node-learning/issues"
   },
-  "homepage": "https://github.com/Valentyn-Sko/node-learning#readme"
+  "homepage": "https://github.com/Valentyn-Sko/node-learning#readme",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
 }

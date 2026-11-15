@@ -1,4 +1,4 @@
-import type { NotesFile } from "./storage.ts";
+import type { NotesFile, Note } from "./storage.ts";
 
 
 export function addNote(notesFile: NotesFile, text: string): NotesFile {
@@ -9,33 +9,34 @@ export function addNote(notesFile: NotesFile, text: string): NotesFile {
     return notesFile;
 }
 
-export function findNote(notesFile: NotesFile, id: number): number {
-    const noteIndex = notesFile.notes.findIndex(item => item.id === id);
-    if (noteIndex === -1) {
-        throw Error(`Note with ID = ${id} not found`);
-    }
-    return noteIndex;
+export function findNote(notesFile: NotesFile, id: number): Note {
+  const note = notesFile.notes.find(item => item.id === id);   // тип: Note | undefined
+  if (!note) {
+    throw new Error(`Note with ID = ${id} not found`);
+  }
+  return note;                                                 // здесь TS уже знает: Note
 }
 
 export function markDone(notesFile: NotesFile, id: number, value: boolean): NotesFile {
     const date = (new Date()).toISOString();
-    const noteIndex = findNote(notesFile, id);
-    notesFile.notes[noteIndex].updatedAt = date;
-    notesFile.notes[noteIndex].done = value;
+    const note = findNote(notesFile, id);
+    note.updatedAt = date;
+    note.done = value;
     return notesFile;
 }
 
 export function deleteNote(notesFile: NotesFile, id: number): NotesFile {
     const noteIndex = findNote(notesFile, id);
-    notesFile.notes.splice(noteIndex, 1);
+    notesFile.notes = notesFile.notes.filter(item => item.id !== id);
     return notesFile;
 }
 
 export function editNote(notesFile: NotesFile, id: number, text: string): NotesFile {
     const noteIndex = findNote(notesFile, id);
     const date = (new Date()).toISOString();
-    notesFile.notes[noteIndex].updatedAt = date;
-    notesFile.notes[noteIndex].text = text;
+    const note = findNote(notesFile, id);
+    note.updatedAt = date;
+    note.text = text;
     return notesFile;
 }
 

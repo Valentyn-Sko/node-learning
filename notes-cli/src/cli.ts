@@ -24,6 +24,11 @@ import { parseId, chechIsText } from "./errors.ts";
 
 const file = process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
 const command = process.argv.slice(2);
+type Command =
+| { kind: 'add'; text: string; tags: string[] }
+| { kind: 'done'; id: number }
+| { kind: 'delete'; id: number }
+| { kind: 'list'; filter: 'all' | 'done' | 'todo' };
 
 try {
     chechIsText(command[0], true);
