@@ -20,8 +20,8 @@ import {
     list,
     markDone,
 } from "./commands.ts";
-import { parseId, chechIsText } from "./errors.ts";
-import { parseText } from "./helper.ts";
+import { parseId } from "./validate.ts";
+import { parseText } from "./validate.ts";
 
 const file = process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
 const [cmd, ...args] = process.argv.slice(2);
@@ -33,11 +33,11 @@ type Command =
 | { kind: 'list'; filter: 'all' | 'done' | 'todo' };
 
 try {
+    if (!cmd) throw new Error('Введите команду, например help'); 
     const commandText = parseText(cmd);
-    chechIsText(commandText, true);
     switch (commandText.toLocaleLowerCase()) {
         case "add": {
-            chechIsText(parseText(args[0]));
+            parseText(args[0]);
             const notesFileText = await load(file);
             const updatedNotes = addNote(notesFileText, parseText(args[0]));
             await save(file, updatedNotes);
@@ -72,7 +72,6 @@ try {
         case "edit": {
             const id = parseId(args[0]);
             const newText = parseText(args[1]);
-            chechIsText(newText);
             const notesFileText = await load(file);
             const updatedNotes = editNote(notesFileText, id, newText);
             await save(file, updatedNotes);

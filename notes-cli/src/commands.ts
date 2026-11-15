@@ -26,6 +26,7 @@ export function markDone(notesFile: NotesFile, id: number, value: boolean): Note
 }
 
 export function deleteNote(notesFile: NotesFile, id: number): NotesFile {
+    findNote(notesFile, id); 
     notesFile.notes = notesFile.notes.filter(item => item.id !== id);
     return notesFile;
 }
