@@ -14,13 +14,15 @@ export function parseId(value: string | undefined): number {
   return id;
 }
 
-export function getEnvNumber(envName: string, fallback: number) {
+export function getEnvNumber(envName: string, fallback: number): number {
   const raw = process.env[envName];
   if (!raw) {
     return fallback;
   }
-  if (!Number(raw) || Number.isInteger(raw)) {
-    throw new Error(`Переменная PORT должна быть числом, получено: ${raw}`);
+  const num = Number(raw?.trim());
+
+  if (Number.isInteger(num) || Number.isNaN(num)) {
+    throw new Error(`Переменная ${ envName } должна быть числом, получено: ${ raw} `);
   }
-  return raw;
+  return +raw;
 }
