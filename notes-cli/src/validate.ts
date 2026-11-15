@@ -15,14 +15,13 @@ export function parseId(value: string | undefined): number {
 }
 
 export function getEnvNumber(envName: string, fallback: number): number {
-  const raw = process.env[envName];
+  const raw = process.env[envName]?.trim();
   if (!raw) {
     return fallback;
   }
-  const num = Number(raw?.trim());
-
-  if (Number.isInteger(num) || Number.isNaN(num)) {
+  const num = Number(raw);
+  if (!Number.isInteger(num) || Number.isNaN(num)) {
     throw new Error(`Переменная ${ envName } должна быть числом, получено: ${ raw} `);
   }
-  return +raw;
+  return num;
 }
