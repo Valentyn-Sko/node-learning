@@ -20,15 +20,13 @@ import {
     list,
     markDone,
 } from "./commands.ts";
-import { chechIsCorrectId, chechIsText } from "./errors.ts";
+import { parseId, chechIsText } from "./errors.ts";
 
-const file =
-    process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
-
-console.log("Arguments:", process.argv.slice(2));
+const file = process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
 const command = process.argv.slice(2);
 
 try {
+    chechIsText(command[0], true);
     switch (command[0].toLocaleLowerCase()) {
         case "add": {
             chechIsText(command[1]);
@@ -43,31 +41,31 @@ try {
             break;
         }
         case "done": {
-            chechIsCorrectId(command[1]);
+            const id = parseId(command[1]);
             const notesFileText = await load(file);
-            const updatedNotes = markDone(notesFileText, +command[1], true);
+            const updatedNotes = markDone(notesFileText, id, true);
             await save(file, updatedNotes);
             break;
         }
         case "undone": {
-            chechIsCorrectId(command[1]);
+            const id = parseId(command[1]);
             const notesFileText = await load(file);
-            const updatedNotes = markDone(notesFileText, +command[1], false);
+            const updatedNotes = markDone(notesFileText, id, false);
             await save(file, updatedNotes);
             break;
         }
         case "delete": {
-            chechIsCorrectId(command[1]);
+            const id = parseId(command[1]);
             const notesFileText = await load(file);
-            const updatedNotes = deleteNote(notesFileText, +command[1]);
+            const updatedNotes = deleteNote(notesFileText, id);
             await save(file, updatedNotes);
             break;
         }
         case "edit": {
-            chechIsCorrectId(command[1]);
+            const id = parseId(command[1]);
             chechIsText(command[2]);
             const notesFileText = await load(file);
-            const updatedNotes = editNote(notesFileText, +command[1], command[2]);
+            const updatedNotes = editNote(notesFileText, id, command[2]);
             await save(file, updatedNotes);
             break;
         }
@@ -79,7 +77,7 @@ try {
             break;
         }
         default: {
-            console.log(
+            console.error(
                 "There is wrong command. Here is a list of available command: Add, List, Done, Undone, Delete, Edit, Help.",
             );
             process.exitCode = 1;

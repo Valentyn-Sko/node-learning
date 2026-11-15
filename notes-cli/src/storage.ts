@@ -26,7 +26,7 @@ export async function load(file: string): Promise<NotesFile> {
             return { nextId: 1, notes: [] };
         } else {
             process.exitCode = 1;
-            throw error;
+            throw new Error(`Файл заметок повреждён: ${file}`);
         }
     }
 }
