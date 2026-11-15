@@ -27,7 +27,6 @@ import { parseCommand } from "./commands.ts";
 const file = process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
 
 const command = parseCommand(process.argv.slice(2))
-if (!command) throw new Error('Введите команду, например help');
 
 try {
     if (!command) throw new Error('Введите команду, например help'); 
