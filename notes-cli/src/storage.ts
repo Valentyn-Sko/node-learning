@@ -15,28 +15,36 @@ export interface NotesFile {
 
 
 export async function load(file: string): Promise<NotesFile> {
-    try {
-        const text = await readFile(file, 'utf8');
-        const data: unknown = JSON.parse(text);
-        if (
-            typeof data === 'object' && data !== null &&
-            'nextId' in data && typeof data.nextId === 'number' && Number.isInteger(data.nextId) && data.nextId > 0 &&
-            'notes' in data && Array.isArray(data.notes) && data.notes.every(isNote)
-        ) {
-            return data as NotesFile;
-        }
+  let text: string;
 
-        throw new Error('Invalid notes file structure');
-        
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-            return { nextId: 1, notes: [] };
-        } else {
-            process.exitCode = 1;
-            throw new Error(`Файл заметок повреждён: ${file}`);
-        }
+  try {
+    text = await readFile(file, "utf8");
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
+      return { nextId: 1, notes: [] };
+    } else {
+      process.exitCode = 1;
+      throw new Error(`Файл заметок повреждён: ${file}`);
     }
-}
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(`Файл заметок повреждён (невалидный JSON): ${file}`);
+  }
+
+  if (!isNotesFile(data)) {
+    throw new Error(`Файл заметок повреждён (неверная структура): ${file}`);
+  }
+
+  if (isNotesFile(data)) {
+    return data as NotesFile;
+  }
+
+  throw new Error("Invalid notes file structure");
+} 
 
 export async function save(file: string, data: NotesFile): Promise<void> {
     await mkdir(path.dirname(file), { recursive: true });
@@ -49,6 +57,15 @@ function isNote(x: unknown): x is Note {
         typeof x === 'object' && x !== null &&
         'id' in x && typeof x.id === 'number' &&
         'text' in x && typeof x.text ==='string' &&
-        'done' in x && typeof x.done ==='boolean'
+        'done' in x && typeof x.done === 'boolean' &&
+        'createdAt' in x && typeof x.text === 'string' &&
+        'updatedAt' in x && typeof x.text ==='string'
     );
+}
+
+function isNotesFile(x: unknown): x is NotesFile {
+  return typeof x === 'object' && x !== null &&
+        'nextId' in x && Number.isInteger(x.nextId) && 
+        'nextId' in x && typeof x.nextId === 'number' && Number.isInteger(x.nextId) && x.nextId > 0 &&
+        'notes' in x && Array.isArray(x.notes) && x.notes.every(isNote);
 }

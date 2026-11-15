@@ -26,13 +26,11 @@ export function markDone(notesFile: NotesFile, id: number, value: boolean): Note
 }
 
 export function deleteNote(notesFile: NotesFile, id: number): NotesFile {
-    const noteIndex = findNote(notesFile, id);
     notesFile.notes = notesFile.notes.filter(item => item.id !== id);
     return notesFile;
 }
 
 export function editNote(notesFile: NotesFile, id: number, text: string): NotesFile {
-    const noteIndex = findNote(notesFile, id);
     const date = (new Date()).toISOString();
     const note = findNote(notesFile, id);
     note.updatedAt = date;
