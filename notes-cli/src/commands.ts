@@ -10,6 +10,7 @@ type Command = { kind: 'add'; text: string; }
 
 export function parseCommand(argv: string[]): Command {
   const [cmd, ...args] = argv;
+  if (!cmd) throw new Error('Введите команду, например: notes help');
   switch (cmd?.toLowerCase()) {
     case 'add': return { kind: 'add', text: parseText(args[0]) };
     case 'done': return { kind: 'done', id: parseId(args[0]) };

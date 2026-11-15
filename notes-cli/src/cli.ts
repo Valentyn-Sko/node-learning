@@ -20,21 +20,17 @@ import {
     list,
     markDone,
 } from "./notes.ts";
-import { parseId } from "./validate.ts";
-import { parseText } from "./validate.ts";
 import { parseCommand } from "./commands.ts";
 
 const file = process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
 
-const command = parseCommand(process.argv.slice(2))
 
 try {
-    if (!command) throw new Error('Введите команду, например help'); 
+    const command = parseCommand(process.argv.slice(2))
     switch (command.kind) {
         case "add": {
-            parseText(command.text);
             const notesFileText = await load(file);
-            const updatedNotes = addNote(notesFileText, parseText(command.text));
+            const updatedNotes = addNote(notesFileText, command.text);
             await save(file, updatedNotes);
             break;
         }
@@ -75,11 +71,8 @@ try {
             break;
         }
         default: {
-            console.error(
-                "There is wrong command. Here is a list of available command: Add, List, Done, Undone, Delete, Edit, Help.",
-            );
-            process.exitCode = 1;
-            break;
+            const unreachable: never = command;
+            throw new Error(`Необработанная команда: ${JSON.stringify(unreachable)}`);
         }
     }
 } catch (error) {
