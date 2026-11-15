@@ -19,27 +19,23 @@ import {
     editNote,
     list,
     markDone,
-} from "./commands.ts";
+} from "./notes.ts";
 import { parseId } from "./validate.ts";
 import { parseText } from "./validate.ts";
+import { parseCommand } from "./commands.ts";
 
 const file = process.env.NOTES_FILE ?? path.join(os.homedir(), ".notes", "notes.json");
-const [cmd, ...args] = process.argv.slice(2);
-if (!cmd) throw new Error('Введите команду, например help');
-type Command =
-| { kind: 'add'; text: string; tags: string[] }
-| { kind: 'done'; id: number }
-| { kind: 'delete'; id: number }
-| { kind: 'list'; filter: 'all' | 'done' | 'todo' };
+
+const command = parseCommand(process.argv.slice(2))
+if (!command) throw new Error('Введите команду, например help');
 
 try {
-    if (!cmd) throw new Error('Введите команду, например help'); 
-    const commandText = parseText(cmd);
-    switch (commandText.toLocaleLowerCase()) {
+    if (!command) throw new Error('Введите команду, например help'); 
+    switch (command.kind) {
         case "add": {
-            parseText(args[0]);
+            parseText(command.text);
             const notesFileText = await load(file);
-            const updatedNotes = addNote(notesFileText, parseText(args[0]));
+            const updatedNotes = addNote(notesFileText, parseText(command.text));
             await save(file, updatedNotes);
             break;
         }
@@ -49,31 +45,26 @@ try {
             break;
         }
         case "done": {
-            const id = parseId(args[0]);
             const notesFileText = await load(file);
-            const updatedNotes = markDone(notesFileText, id, true);
+            const updatedNotes = markDone(notesFileText, command.id, true);
             await save(file, updatedNotes);
             break;
         }
         case "undone": {
-            const id = parseId(args[0]);
             const notesFileText = await load(file);
-            const updatedNotes = markDone(notesFileText, id, false);
+            const updatedNotes = markDone(notesFileText, command.id, false);
             await save(file, updatedNotes);
             break;
         }
         case "delete": {
-            const id = parseId(args[0]);
             const notesFileText = await load(file);
-            const updatedNotes = deleteNote(notesFileText, id);
+            const updatedNotes = deleteNote(notesFileText, command.id);
             await save(file, updatedNotes);
             break;
         }
         case "edit": {
-            const id = parseId(args[0]);
-            const newText = parseText(args[1]);
             const notesFileText = await load(file);
-            const updatedNotes = editNote(notesFileText, id, newText);
+            const updatedNotes = editNote(notesFileText, command.id, command.text);
             await save(file, updatedNotes);
             break;
         }
@@ -103,3 +94,5 @@ try {
     process.exitCode = 1;
 
 }
+
+
