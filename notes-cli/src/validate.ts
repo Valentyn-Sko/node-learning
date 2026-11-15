@@ -13,3 +13,14 @@ export function parseId(value: string | undefined): number {
   }
   return id;
 }
+
+export function getEnvNumber(envName: string, fallback: number) {
+  const raw = process.env[envName];
+  if (!raw) {
+    return fallback;
+  }
+  if (!Number(raw) || Number.isInteger(raw)) {
+    throw new Error(`Переменная PORT должна быть числом, получено: ${raw}`);
+  }
+  return raw;
+}
