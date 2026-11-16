@@ -1,17 +1,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import type { NotesFile } from './types.ts';
 
-export interface Note {
-    id: number;
-    text: string;
-    done: boolean;
-    createdAt: string; // ISO
-    updatedAt: string; // ISO
-}
-export interface NotesFile {
-    nextId: number;
-    notes: Note[];
-}
 
 
 export async function load(file: string): Promise<NotesFile> {
