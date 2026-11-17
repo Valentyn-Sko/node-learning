@@ -32,6 +32,7 @@ try {
             const notesFileText = await load(file);
             const updatedNotes = addNote(notesFileText, command.text);
             await save(file, updatedNotes);
+            console.log(`Добавлена заметка #${updatedNotes.nextId - 1}`);
             break;
         }
         case "list": {
