@@ -49,43 +49,43 @@ describe("getEnvNumber", () => {
     });
 
     it("Не задано числоб вернет fallback", () => {
-        assert.equal(getEnvNumber("PORT", 3000), 3000);
+        assert.equal(getEnvNumber(VAR, 3000), 3000);
     })
 
     it("Задано число 8080", () => {
-        process.env['PORT'] = '8080';
-        assert.equal(getEnvNumber("PORT", 1000), 8080);
+        process.env[VAR] = '8080';
+        assert.equal(getEnvNumber(VAR, 1000), 8080);
     })
 
     it("Задано число 0", () => {
-        process.env['PORT'] = '0';
-        assert.equal(getEnvNumber("PORT", 8080), 0);
+        process.env[VAR] = '0';
+        assert.equal(getEnvNumber(VAR, 8080), 0);
     })
 
     it("Задано число -1", () => {
-        process.env['PORT'] = '-1';
-        assert.equal(getEnvNumber("PORT", 8080), -1);
+        process.env[VAR] = '-1';
+        assert.equal(getEnvNumber(VAR, 8080), -1);
     })
 
     it("Задано число 1e3", () => {
-        process.env['PORT'] = '1e3';
-        assert.equal(getEnvNumber("PORT", 8080), 1000);
+        process.env[VAR] = '1e3';
+        assert.equal(getEnvNumber(VAR, 8080), 1000);
     })
 
 
     it("Задано 'пробелы'", () => {
-        process.env['PORT'] = '    ';
-        assert.equal(getEnvNumber("PORT", 3000), 3000);
+        process.env[VAR] = '    ';
+        assert.equal(getEnvNumber(VAR, 3000), 3000);
     })
 
     it("Задано 'дробное'", () => {
-        process.env['PORT'] = '3500.4';
-        assert.throws(()=>getEnvNumber("PORT", 3000), /Переменная PORT должна быть числом, получено: 3500.4/);
+        process.env[VAR] = '3500.4';
+        assert.throws(()=>getEnvNumber(VAR, 3000), /Переменная TEST_NOTES_PORT должна быть числом, получено: 3500.4/);
     })
     
     it("Задано 'abc'", () => {
-        process.env['PORT'] = 'abc';
-        assert.throws(() => getEnvNumber("PORT", 8080), /Переменная PORT должна быть числом, получено: abc/);
+        process.env[VAR] = 'abc';
+        assert.throws(() => getEnvNumber(VAR, 8080), /Переменная TEST_NOTES_PORT должна быть числом, получено: abc/);
     })
 });
 
