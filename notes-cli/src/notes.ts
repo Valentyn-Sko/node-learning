@@ -34,7 +34,7 @@ export function markDone(
   value: boolean,
 ): NotesFile {
   const date = new Date().toISOString();
-  const note = findNote(notesFile, id);
+  findNote(notesFile, id);
 
   return {
     ...notesFile,
@@ -50,7 +50,6 @@ export function deleteNote(notesFile: NotesFile, id: number): NotesFile {
   return {
     ...notesFile,
     notes: [...notesFile.notes.filter((item) => item.id !== id)],
-    nextId: notesFile.nextId + 1,
   };
 }
 
@@ -60,7 +59,7 @@ export function editNote(
   text: string,
 ): NotesFile {
   const date = new Date().toISOString();
-  const note = findNote(notesFile, id);
+  findNote(notesFile, id);
 
   return {
     ...notesFile,
