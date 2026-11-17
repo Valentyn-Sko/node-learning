@@ -1,18 +1,30 @@
-import type { NotesFile, Note } from "./storage.ts";
+import { NotFoundError } from "./errors.ts";
+import type { Note, NotesFile } from "./types.ts";
+import { parseText } from "./validate.ts";
 
 
 export function addNote(notesFile: NotesFile, text: string): NotesFile {
-    const date = (new Date()).toISOString();
-    notesFile.notes.push({ id: notesFile.nextId, text, done: false, createdAt: date, updatedAt: date });
-    console.log(`Добавлена заметка #${notesFile.nextId}`);
-    notesFile.nextId++;
-    return notesFile;
+    const date = new Date().toISOString();
+    parseText(text);
+    const newNote = {
+        id: notesFile.nextId,
+        text,
+        done: false,
+        createdAt: date,
+        updatedAt: date
+    };
+
+    return {
+        ...notesFile,
+        notes: [...notesFile.notes, newNote],
+        nextId: notesFile.nextId + 1
+    };
 }
 
 export function findNote(notesFile: NotesFile, id: number): Note {
   const note = notesFile.notes.find(item => item.id === id);   // тип: Note | undefined
   if (!note) {
-    throw new Error(`Note with ID = ${id} not found`);
+      throw new NotFoundError(id);
   }
   return note;                                                 // здесь TS уже знает: Note
 }

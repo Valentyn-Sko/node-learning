@@ -4,8 +4,9 @@
   "description": "",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test notes-cli/test/*.test.ts",
+    "check": "npm run typecheck && npm test"
   },
   "repository": {
     "type": "git",

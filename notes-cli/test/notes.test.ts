@@ -1,31 +1,34 @@
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import { addNote, markDone } from "../src/notes.ts";
-import type { Note } from "../src/types.ts";
+import type { Note, NotesFile } from "../src/types.ts";
 
 describe("addNote", () => {
-  let notes: Note[];
+  const data: NotesFile = { nextId: 1, notes: [] };
 
   beforeEach(() => {
-    notes = [];
+    data.notes = [];
+    data.nextId = 1;
   });
   it("добавляет заметку с id = 1 в пустой список", () => {
-    const result = addNote(notes, "Купить молоко");
-    assert.equal(result.length, 1);
-    assert.equal(result[0]?.id, 1);
-    assert.equal(result[0]?.done, false);
+    const result = addNote(data, "Купить молоко");
+    assert.equal(result.notes.length, 1);
+    assert.equal(result.notes[0]?.id, 1);
+    assert.equal(result.notes[0]?.done, false);
   });
 
   it("не мутирует исходный массив", () => {
-    addNote(notes, "x");
-    assert.deepEqual(notes, []);
-    it("бросает ошибку на пустой текст", () => {
-      assert.throws(() => addNote(notes, " "), /пуст/i);
-    });
+    const original = data.notes;
+    addNote(data, "x");
+    assert.deepEqual(original, []);
+  });
+  it("бросает ошибку на пустой текст", () => {
+    assert.throws(() => addNote(data, " "), /Текст не может быть пустым/i);
   });
 });
 describe("markDone", () => {
   it("бросает NotFoundError для несуществующего id", () => {
-    assert.throws(() => markDone([], 42, true), { name: "NotFoundError" });
+    const data: NotesFile = { nextId: 1, notes: [] };
+    assert.throws(() => markDone(data, 42, true), { name: "NotFoundError" });
   });
 });
