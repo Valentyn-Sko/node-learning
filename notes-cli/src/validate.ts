@@ -14,6 +14,28 @@ export function parseId(value: string | undefined): number {
   return id;
 }
 
+const AVAILABLE_FILTERS = ['all', 'done', 'todo'] as const;
+
+export type Filter = (typeof AVAILABLE_FILTERS)[number];
+
+function isFilter(value: string): value is Filter {
+  return AVAILABLE_FILTERS.some(filter => filter === value);
+}
+
+export function parseFilter(value: string | undefined): Filter {
+  const text = value?.trim().replace(/^--/, '');;
+
+  if (!text) {
+    throw new Error('Текст не может быть пустым');
+  }
+
+  if (!isFilter(text)) {
+    throw new Error('Список доступных фильтров: --all, --done, --todo');
+  }
+
+  return text;
+}
+
 export function getEnvNumber(envName: string, fallback: number): number {
   const raw = process.env[envName]?.trim();
   if (!raw) {

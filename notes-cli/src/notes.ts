@@ -1,6 +1,6 @@
 import { NotFoundError } from "./errors.ts";
 import type { Note, NotesFile } from "./types.ts";
-import { parseText } from "./validate.ts";
+import { parseText, type Filter } from "./validate.ts";
 
 export function addNote(notesFile: NotesFile, text: string): NotesFile {
   const date = new Date().toISOString();
@@ -69,12 +69,27 @@ export function editNote(
   };
 }
 
-export function list(notesFile: NotesFile) {
-  const total = notesFile.notes.length;
-  if (!total) {
-    console.log('Заметок пока нет. Добавьте: notes add "текст"');
+export function list(notesFile: NotesFile, filter: Filter) {
+    const notes = (filter === 'done' || filter === 'todo')
+        ? notesFile.notes.filter(item => {
+            if (filter === 'done' && item.done) {
+                return true;
+            } else if (filter === 'todo' && !item.done) {
+                return true;
+            }
+        })
+        : [ ...notesFile.notes ];
+
+    const total = notes.length;
+    if (!total && (filter === 'done' || filter === 'todo')) {
+        console.log('Заметок удовлетворяющих фильтру пока нет. Добавьте: notes add "текст"');
     return;
-  }
+    }
+    if (!total) {
+        console.log('Заметок пока нет. Добавьте: notes add "текст"');
+        return;
+    }
+
   notesFile.notes.forEach((item) => {
     console.log(
       `#${item.id} [${item.done ? "x" : " "}] ${item.text} \t (${item.updatedAt})`,

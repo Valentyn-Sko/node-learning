@@ -34,10 +34,9 @@ describe("load/save", () => {
         await rm(tempDir, { recursive: true, force: true });
         const date = (new Date()).toISOString();
         const data: NotesFile = { nextId: 2, notes: [{id: 20, text:'Test text 20', createdAt: date, updatedAt: date, done: false}] }
-        const file = path.join(tempDir, 'notes.json');
+        const file = path.join(tempDir, 'a', 'b', 'notes.json');
         await save(file, data);
-        const result = await load(file);
-        assert.deepEqual(result, data);
+        assert.deepEqual(await load(file), data);
     });
 
     it("файл с битым JSON (запишите его сами через writeFile) → load отклоняется с сообщением «невалидный JSON»", async () => {
