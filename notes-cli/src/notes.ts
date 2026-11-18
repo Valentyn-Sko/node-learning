@@ -82,7 +82,7 @@ export function list(notesFile: NotesFile, filter: Filter) {
 
     const total = notes.length;
     if (!total && (filter === 'done' || filter === 'todo')) {
-        console.log('Заметок удовлетворяющих фильтру пока нет. Добавьте: notes add "текст"');
+        console.log(`Нет заметок с фильтром ${filter}`);
     return;
     }
     if (!total) {
@@ -90,12 +90,12 @@ export function list(notesFile: NotesFile, filter: Filter) {
         return;
     }
 
-  notesFile.notes.forEach((item) => {
+    notes.forEach((item) => {
     console.log(
       `#${item.id} [${item.done ? "x" : " "}] ${item.text} \t (${item.updatedAt})`,
     );
   });
-  const done = notesFile.notes.filter((item) => item.done).length;
+  const done = notes.filter((item) => item.done).length;
   console.log(`Total: ${total}, done: ${done}`);
   return;
 }

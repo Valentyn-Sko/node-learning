@@ -26,7 +26,7 @@ export function parseFilter(value: string | undefined): Filter {
   const text = value?.trim().replace(/^--/, '');;
 
   if (!text) {
-    throw new Error('Текст не может быть пустым');
+    return 'all';
   }
 
   if (!isFilter(text)) {
