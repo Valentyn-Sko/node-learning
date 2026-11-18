@@ -37,7 +37,7 @@ try {
         }
         case "list": {
             const notesFileText = await load(file);
-            list(notesFileText);
+            list(notesFileText, command.filter);
             break;
         }
         case "done": {
