@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createInterface } from "node:readline";
 import { performance } from "node:perf_hooks";
+import { parseOptions } from "./parseOptions.ts";
 
 interface PathStats {
   count: number;
@@ -24,15 +25,7 @@ interface Report {
   slowestPaths: Array<{ path: string; average: number }>;
 }
 
-const args = process.argv.slice(2);
-
-const filePath = args.find((arg) => !arg.startsWith("--"));
-
-const topIndex = args.indexOf("--top");
-const topValue = topIndex !== -1 ? args[topIndex + 1] : "5";
-const top = Number(topValue);
-
-const jsonOutput = args.includes("--json");
+const { file: filePath, top, json: jsonOutput } = parseOptions(process.argv.slice(2));
 
 if (!filePath) {
   throw new Error("Usage: analyze.ts <file> [--top 5] [--json]");
@@ -127,7 +120,7 @@ function getPercentage(value: number): string {
   return `${((value / validLines) * 100).toFixed(1)}%`;
 }
 
-function analyzeLine(line: string): void {
+export function analyzeLine(line: string): void {
   totalLines++;
 
   const match = LOG_PATTERN.exec(line);
@@ -193,7 +186,7 @@ function analyzeLine(line: string): void {
   maxTime = Math.max(maxTime, duration);
 }
 
-function createReport(): Report {
+export function createReport(): Report {
   const statusGroups = ["2xx", "3xx", "4xx", "5xx"] as const;
 
   const statuses = Object.fromEntries(
