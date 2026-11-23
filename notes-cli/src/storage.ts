@@ -1,6 +1,6 @@
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import path from 'node:path';
-import type { Note, NotesFile, StoredNote } from './types.ts';
+import type { Note, NotesFile, StoredNote, StoredNoteFile } from './types.ts';
 
 
 
@@ -35,7 +35,7 @@ export async function load(file: string): Promise<NotesFile> {
   
 } 
 
-export async function save(file: string, data: NotesFile): Promise<void> {
+export async function save(file: string, data: StoredNoteFile): Promise<void> {
     await mkdir(path.dirname(file), { recursive: true });
     const json = JSON.stringify(data ?? { nextId: 1, notes: [] }, null, 2);
     const tmp = `${file}.tmp`;

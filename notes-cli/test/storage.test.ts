@@ -4,7 +4,7 @@ import path from 'node:path';
 import os from 'node:os';
 import { load, save } from "../src/storage.ts";
 import assert from "node:assert/strict";
-import type { NotesFile } from "../src/types.ts";
+import type { NotesFile, StoredNoteFile } from "../src/types.ts";
 
 describe("load/save", () => {
     let tempDir: string;
@@ -23,7 +23,7 @@ describe("load/save", () => {
 
     it("save, затем load → получили те же данные (round-trip);", async () => {
         const date = (new Date()).toISOString();
-        const data: NotesFile = { nextId: 2, notes: [{id: 20, text:'Test text 20', createdAt: date, updatedAt: date, done: false}] }
+        const data: StoredNoteFile = { nextId: 2, notes: [{id: 20, text:'Test text 20', createdAt: date, updatedAt: date, done: false, tags: []}] }
         const file = path.join(tempDir, 'notes.json');
         await save(file, data);
         const result = await load(file);
@@ -33,7 +33,7 @@ describe("load/save", () => {
     it("save в несуществующую вложенную папку (dir/a/b/notes.json)", async () => {
         await rm(tempDir, { recursive: true, force: true });
         const date = (new Date()).toISOString();
-        const data: NotesFile = { nextId: 2, notes: [{id: 20, text:'Test text 20', createdAt: date, updatedAt: date, done: false}] }
+        const data: StoredNoteFile = { nextId: 2, notes: [{id: 20, text:'Test text 20', createdAt: date, updatedAt: date, done: false, tags: []}] }
         const file = path.join(tempDir, 'a', 'b', 'notes.json');
         await save(file, data);
         assert.deepEqual(await load(file), data);

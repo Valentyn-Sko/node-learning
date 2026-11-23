@@ -11,7 +11,7 @@ describe("addNote", () => {
     data.nextId = 1;
   });
   it("добавляет заметку с id = 1 в пустой список", () => {
-    const result = addNote(data, "Купить молоко");
+    const result = addNote(data, "Купить молоко", []);
     assert.equal(result.notes.length, 1);
     assert.equal(result.notes[0]?.id, 1);
     assert.equal(result.notes[0]?.done, false);
@@ -19,11 +19,11 @@ describe("addNote", () => {
 
   it("не мутирует исходный массив", () => {
     const before = structuredClone(data);
-    addNote(data, "x");
+    addNote(data, "x", []);
     assert.deepEqual(data, before);
   });
   it("бросает ошибку на пустой текст", () => {
-    assert.throws(() => addNote(data, " "), /Текст не может быть пустым/i);
+    assert.throws(() => addNote(data, " ", []), /Текст не может быть пустым/i);
   });
 });
 describe("markDone", () => {

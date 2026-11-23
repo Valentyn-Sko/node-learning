@@ -1,8 +1,8 @@
 import { NotFoundError } from "./errors.ts";
-import type { Note, NotesFile } from "./types.ts";
+import type { Note, NotesFile, StoredNoteFile } from "./types.ts";
 import { parseText, type Filter } from "./validate.ts";
 
-export function addNote(notesFile: NotesFile, text: string, tags: string[]): NotesFile {
+export function addNote(notesFile: NotesFile, text: string, tags: string[]): StoredNoteFile {
   const date = new Date().toISOString();
   parseText(text);
   const newNote = {
