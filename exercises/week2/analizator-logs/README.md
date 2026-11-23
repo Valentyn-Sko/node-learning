@@ -1,374 +1,75 @@
 # Log Generator & Analyzer
-
-A TypeScript utility for generating large access log files and analyzing HTTP request statistics.
+A TypeScript utility that generates large access logs and analyzes HTTP request statistics.
 
 ## Requirements
 
-- Node.js 20+
-- npm
+- **Node.js 22.18+** (runs `.ts` files natively, no `tsx` or build step)
+- `npm install` in the repository root — only for `tsc` type checking
 
-## Installation
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-Install TypeScript runner if it is not already installed:
-
-```bash
-npm install -D tsx typescript
-```
-
-## 1. Generate access logs
-
-The `generate.ts` script generates a log file with configurable number of lines.
-
-### Usage
-
-```bash
-node generate.ts [--lines <number>] [--out <filename>]
-```
-
-### Examples
-
-Generate 1 million log entries (default):
-
-```bash
-node generate.ts
-```
-
-Generate 1 million entries and save to `access.log`:
-
-```bash
-node generate.ts --lines 1000000 --out access.log
-```
-
-Generate 100,000 entries:
-
-```bash
-node generate.ts --lines 100000 --out test.log
-```
-
-### Generated log format
+## Structure
 
 ```text
-2026-11-11T10:00:00.123Z 192.168.1.15 GET /api/users 200 123ms
-2026-11-11T10:00:00.456Z 10.0.0.7 POST /api/orders 201 87ms
-2026-11-11T10:00:01.001Z 192.168.1.15 GET /api/users/42 404 12ms
+analizator-logs/
+  src/
+    parse-options.ts    — CLI argument parsing
+    stats.ts            — parseLine, analyzeLine, createReport, ... (functions only, no main)
+    analyze.ts          — stream version (createReadStream + readline)
+    analyze-readfile.ts — readFile version (whole file in memory), for comparison
+    generate.ts         — log generator
+  test/
+    parse-options.test.ts
+    stats.test.ts
 ```
 
-Generated data includes:
-- Approximately 50 different IP addresses with uneven distribution.
-- Approximately 15 API endpoints.
-- HTTP methods: GET, POST, PUT, DELETE.
-- Realistic HTTP status code distribution (2xx, 4xx, rare 5xx).
-- Response times between 5 and 2000 ms.
-- Increasing timestamps.
-- Approximately 0.1% malformed log entries.
-
-The generator uses `createWriteStream` with backpressure handling to keep memory usage under control.
-
-## 2. Analyze access logs
-
-The `analyze.ts` script processes log files and generates HTTP request statistics.
-
-### Usage
+## Usage
 
 ```bash
-node analyze.ts <file> [--top <number>] [--json]
-```
+# Generate a log (default: 1 000 000 lines → access.log)
+node src/generate.ts --lines 1000000 --out access-1m.log
 
-### Arguments
+# Analyze
+node src/analyze.ts access-1m.log
+node src/analyze.ts --top 10 access-1m.log --json > report.json 2> perf.log
+
+# Tests (from the repository root)
+node --test exercises/week2/analizator-logs/test/*.test.ts
+```
 
 | Argument | Description | Default |
 |---|---|---|
-| `file` | Path to the log file | Required |
-| `--top` | Number of top IPs and endpoints to display | `5` |
-| `--json` | Output report in JSON format | `false` |
+| `file` | Path to the log file | required |
+| `--top <n>` | Number of top IPs / paths | `5` |
+| `--json` | Print the report as JSON | `false` |
 
-### Examples
+Arguments can go in any order. The report goes to `stdout`, time and memory go to `stderr`.
 
-Analyze a log file:
+Log line format:
 
-```bash
-node analyze.ts access.log
+```text
+2026-11-11T10:00:00.123Z 192.168.1.15 GET /api/users 200 123ms
 ```
 
-Display top 10 IPs and endpoints:
+Malformed lines (~0.1% in generated files) are counted as `Broken` and skipped.
 
-```bash
-node analyze.ts access.log --top 10
-```
+## Experiment: stream vs readFile
 
-Analyze with JSON output:
+| File | Version | Time | RSS | Heap | Result |
+|---|---|---|---|---|---|
+| 1M lines (65 MB) | stream | 0.92 s | **115 MB** | 18 MB | ✅ |
+| 1M lines (65 MB) | readFile | 0.92 s | **420 MB** | 180 MB | ✅ |
+| 1M lines (65 MB) | readFile, `--max-old-space-size=256` | 0.91 s | 324 MB | 119 MB | ✅ |
+| 10M lines (645 MB) | stream | 9.20 s | **146 MB** | 29 MB | ✅ |
+| 10M lines (645 MB) | stream, `--max-old-space-size=256` | 9.34 s | 146 MB | 18 MB | ✅ |
+| 10M lines (645 MB) | readFile | — | — | — | ❌ `Invalid string length` |
+| 10M lines (645 MB) | readFile, `--max-old-space-size=256` | — | — | — | ❌ `JavaScript heap out of memory` |
 
-```bash
-node analyze.ts access.log --json
-```
+Node v24.13.0, macOS.
 
-Arguments can be specified in any order:
+**Conclusion.** Speed is the same, but memory is not. The stream version keeps only one line plus counters in memory, so its memory stays almost flat (115 → 146 MB) when the file grows 10×. The readFile version needs memory proportional to the file: the whole file as one string plus an array of 1M line strings (~420 MB RSS for a 65 MB file). With 10M lines it cannot work at all: a 645 MB file is larger than V8's maximum string length (~512 MB, `buffer.constants.MAX_STRING_LENGTH`), and with a 256 MB heap limit it crashes with OOM. Use streams for files whose size you do not control.
 
-```bash
-node analyze.ts --top 3 access.log
-node analyze.ts --json --top 10 access.log
-```
+## How the analyzer works
 
-### Analysis results
-
-The analyzer calculates:
-
-- Total number of log lines.
-- Number of valid and malformed entries.
-- HTTP status code distribution (2xx, 3xx, 4xx, 5xx).
-- Average response time.
-- Median response time (P50).
-- 95th percentile response time (P95).
-- Maximum response time.
-- Top IP addresses by request count.
-- Top endpoints by request count.
-- Slowest endpoints by average response time.
-
-The analyzer uses:
-- `createReadStream` and `readline` for streaming file processing.
-- `Map` for request counters and endpoint statistics.
-- A fixed-size histogram (2001 elements) to calculate median and P95 without storing all response times.
-- Error handling for malformed entries and file access errors.
-
-Performance metrics (execution time and memory usage) are printed to `stderr`, while the report is printed to `stdout`.
-
-### JSON output
-
-Save the report to a JSON file:
-
-```bash
-node analyze.ts access.log --json > report.json
-```
-
-Save the report and performance metrics separately:
-
-```bash
-node analyze.ts access.log --json > report.json 2> performance.log
-```
-
-## 3. Complete workflow
-
-Generate a log file:
-
-```bash
-node generate.ts --lines 1000000 --out access.log
-```
-
-Analyze the generated file:
-
-```bash
-node analyze.ts access.log --top 5
-```
-
-Export the analysis report:
-
-```bash
-node analyze.ts access.log --top 10 --json > report.json
-```
-
-## Error handling
-
-The analyzer handles the following errors:
-
-- Missing file.
-- Directory passed instead of a file.
-- Insufficient file permissions.
-- Invalid or malformed log entries.
-- Invalid CLI arguments.
-
-Malformed entries are counted and skipped without interrupting analysis.
-
-
-
----------------------------------------------------------------------------------
-
-MacBook-Pro-VS:analizator-logs valentyn$ node analyze.ts access-1m.log
-File: access-1m.log
-Lines: 1 000 000
-Valid: 998 996
-Broken: 1 004
-
-Статусы:
-2xx: 84.1%
-3xx: 0.0%
-4xx: 13.1%
-5xx: 2.8%
-
-Время ответа:
-Среднее: 1002 мс
-Медиана: 1002 мс
-p95: 1901 мс
-Максимум: 2000 мс
-
-Топ-5 IP:
-192.168.0.3 108 394
-192.168.0.5 108 393
-192.168.0.4 108 269
-192.168.0.2 107 626
-192.168.0.1 107 616
-
-Топ-5 путей:
-POST /api/reports 16 880
-DELETE /api/payments/15 16 849
-GET /api/dashboard 16 842
-POST /api/products 16 814
-DELETE /api/users 16 802
-
-Самые медленные пути (среднее время):
-PUT /api/users/15 1 012 мс
-GET /api/products 1 010 мс
-DELETE /api/notifications 1 010 мс
-GET /api/auth/logout 1 009 мс
-DELETE /api/reports 1 009 мс
-
-Processed in: 0.90 sec
-Memory (RSS): 99.08 MB
-Memory (Heap): 14.62 MB
-
----------------------------------------------------------------------------------
-
-MacBook-Pro-VS:analizator-logs valentyn$ node analyze.ts access-10m.log
-File: access-10m.log
-Lines: 10 000 000
-Valid: 9 990 047
-Broken: 9 953
-
-Статусы:
-2xx: 84.1%
-3xx: 0.0%
-4xx: 13.1%
-5xx: 2.8%
-
-Время ответа:
-Среднее: 1003 мс
-Медиана: 1002 мс
-p95: 1901 мс
-Максимум: 2000 мс
-
-Топ-5 IP:
-192.168.0.5 1 081 058
-192.168.0.1 1 080 794
-192.168.0.4 1 080 224
-192.168.0.3 1 079 172
-192.168.0.2 1 078 927
-
-Топ-5 путей:
-PUT /api/users/15 167 263
-GET /api/users 167 207
-POST /api/products 167 197
-POST /api/orders 167 179
-GET /api/users/42 167 103
-
-Самые медленные пути (среднее время):
-GET /api/notifications 1 005 мс
-DELETE /api/payments 1 005 мс
-GET /api/reports 1 005 мс
-GET /api/payments/15 1 005 мс
-PUT /api/products 1 005 мс
-
-Processed in: 9.06 sec
-Memory (RSS): 142.81 MB
-Memory (Heap): 15.10 MB
-
-
-
---------------------------------------------------------------------------------
-
-Processed in: 1.01 sec
-Memory (RSS): 421.44 MB
-Memory (Heap): 236.82 MB
-Processed lines: 1000000
-File: access-1m.log
-Lines: 2 000 000
-Valid: 1 997 992
-Broken: 2 008
-
-Статусы:
-2xx: 84.1%
-3xx: 0.0%
-4xx: 13.1%
-5xx: 2.8%
-
-Время ответа:
-Среднее: 1002 мс
-Медиана: 1002 мс
-p95: 1901 мс
-Максимум: 2000 мс
-
-Топ-5 IP:
-192.168.0.3 216 788
-192.168.0.5 216 786
-192.168.0.4 216 538
-192.168.0.2 215 252
-192.168.0.1 215 232
-
-Топ-5 путей:
-POST /api/reports 33 760
-DELETE /api/payments/15 33 698
-GET /api/dashboard 33 684
-POST /api/products 33 628
-DELETE /api/users 33 604
-
-Самые медленные пути (среднее время):
-PUT /api/users/15 1 012 мс
-GET /api/products 1 010 мс
-DELETE /api/notifications 1 010 мс
-GET /api/auth/logout 1 009 мс
-DELETE /api/reports 1 009 мс
-
-Processed in: 1.80 sec
-Memory (RSS): 287.30 MB
-Memory (Heap): 48.50 MB
-
-
----------------------------------------------------------------------------------
-
-MacBook-Pro-VS:analizator-logs valentyn$ node analyze-readfile.ts access-10m.log
-Error: Invalid string length
-File: access-10m.log
-Lines: 10 000 000
-Valid: 9 990 047
-Broken: 9 953
-
-Статусы:
-2xx: 84.1%
-3xx: 0.0%
-4xx: 13.1%
-5xx: 2.8%
-
-Время ответа:
-Среднее: 1003 мс
-Медиана: 1002 мс
-p95: 1901 мс
-Максимум: 2000 мс
-
-Топ-5 IP:
-192.168.0.5 1 081 058
-192.168.0.1 1 080 794
-192.168.0.4 1 080 224
-192.168.0.3 1 079 172
-192.168.0.2 1 078 927
-
-Топ-5 путей:
-PUT /api/users/15 167 263
-GET /api/users 167 207
-POST /api/products 167 197
-POST /api/orders 167 179
-GET /api/users/42 167 103
-
-Самые медленные пути (среднее время):
-GET /api/notifications 1 005 мс
-DELETE /api/payments 1 005 мс
-GET /api/reports 1 005 мс
-GET /api/payments/15 1 005 мс
-PUT /api/products 1 005 мс
-
-Processed in: 8.99 sec
-Memory (RSS): 732.55 MB
-Memory (Heap): 539.03 MB
+- `createReadStream` + `readline` — streaming line-by-line reading.
+- `Map` for counters by IP, path and path timings.
+- A fixed 2001-element histogram (response time 0–2000 ms) for median and p95, so individual times are not stored.
+- All state lives in a `Stats` object from `createStats()`, not in module-level variables, so two analyses never mix their numbers.
