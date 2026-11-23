@@ -1,15 +1,4 @@
-/*
-notes add "Купить молоко"
-→ Добавлена заметка #1
-notes list → список всех заметок
-notes done 1 → отметить #1 выполненной
-notes undone 1 → снять отметку
-notes delete 1 → удалить #1
-notes edit 2 "Новый текст" → изменить текст
-notes help → справка
-
-*/
-
+#!/usr/bin/env node
 import { load, save } from "./storage.ts";
 import path from "node:path";
 import os from "node:os";
@@ -30,7 +19,7 @@ try {
     switch (command.kind) {
         case "add": {
             const notesFileText = await load(file);
-            const updatedNotes = addNote(notesFileText, command.text);
+            const updatedNotes = addNote(notesFileText, command.text, command.tags);
             await save(file, updatedNotes);
             console.log(`Добавлена заметка #${updatedNotes.nextId - 1}`);
             break;

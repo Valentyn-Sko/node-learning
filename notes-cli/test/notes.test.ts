@@ -42,6 +42,7 @@ describe("deleteNote", () => {
         id: 1,
         text: "test note",
         done: false,
+        tags: [],
         updatedAt: date,
         createdAt: date,
       },
@@ -55,7 +56,8 @@ describe("deleteNote", () => {
         {
           id: 1,
           text: "test note",
-          done: false,
+            done: false,
+          tags: [],
           updatedAt: date,
           createdAt: date,
         },
@@ -86,6 +88,7 @@ describe("editNote", () => {
         done: false,
         updatedAt: date,
         createdAt: date,
+        tags: [],
       },
     ],
   };
@@ -99,7 +102,8 @@ describe("editNote", () => {
           text: "test note",
           done: false,
           updatedAt: date,
-          createdAt: date,
+         createdAt: date,
+          tags: [],
         },
       ],
     };

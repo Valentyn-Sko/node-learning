@@ -23,7 +23,7 @@ function isFilter(value: string): value is Filter {
 }
 
 export function parseFilter(value: string | undefined): Filter {
-  const text = value?.trim().replace(/^--/, '');;
+  const text = value?.trim().replace(/^--/, '');
 
   if (!text) {
     return 'all';
