@@ -4,7 +4,9 @@
   "description": "",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test notes-cli/test/*.test.ts",
+    "check": "npm run typecheck && npm test"
   },
   "repository": {
     "type": "git",
@@ -17,5 +19,12 @@
   "bugs": {
     "url": "https://github.com/Valentyn-Sko/node-learning/issues"
   },
-  "homepage": "https://github.com/Valentyn-Sko/node-learning#readme"
+  "homepage": "https://github.com/Valentyn-Sko/node-learning#readme",
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  },
+  "bin": {
+    "notes": "./notes-cli/src/cli.ts"
+  }
 }
