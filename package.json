@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --test notes-cli/test/*.test.ts",
+    "test": "node --test notes-cli/test/*.test.ts exercises/week3/*/test/*.test.ts",
     "check": "npm run typecheck && npm test"
   },
   "repository": {
