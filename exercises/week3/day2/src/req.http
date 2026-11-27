@@ -1,0 +1,12 @@
+### список
+GET http://localhost:3000/api/notes
+
+### создать
+POST http://localhost:3000/api/notes
+Content-Type: application/json
+
+{"text": "Купить молоко"}
+
+### 415
+POST http://localhost:3000/api/notes
+Content-Type: text/plain
