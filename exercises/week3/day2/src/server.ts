@@ -66,14 +66,37 @@ const server = createServer(async (req, res) => {
 
         notes.set(note.id, note);
 
-        sendJson(res, 201, note);
+        sendJson(res, 201, note, {
+          Location: `/api/notes/${note.id}`,
+        });
+        break;
+      }
+        
+      case (req.method === 'GET' && url.pathname === '/slow'): {
+        const start = Date.now();
+
+          while (Date.now() - start < 3000) {
+            
+          }
+
+          sendJson(res, 200, {
+            message: 'Slow request completed',
+          });
+
+        break;
+      } 
+
+      case (req.method === 'GET' && url.pathname === '/health'): {
+        sendJson(res, 200, {
+          status: 'ok',
+        });
+
         break;
       }
 
       default:
-        throw new HttpError(404, 'Маршрут не найден');
+        throw new HttpError(405, 'Маршрут не найден');
     }
-    console.log(`${req.method} ${req.url} → ${res.statusCode} (${(performance.now() - started).toFixed(1)} ms)`)
     
   } catch (error) {
     if (error instanceof HttpError) {
@@ -82,7 +105,9 @@ const server = createServer(async (req, res) => {
       console.error(error);
       sendJson(res, 500, { error: 'Внутренняя ошибка сервера' });
     }
-    console.log(`${req.method} ${req.url} → ${res.statusCode} (${(performance.now() - started).toFixed(1)} ms)`)
+    
+  } finally {
+    console.log(`${req.method} ${req.url} → ${res.statusCode} (${(performance.now() - started).toFixed(1)} ms)`);
   }
 });
 server.listen(3000, () => console.log('http://localhost:3000'));

@@ -1,13 +1,26 @@
-import type { ServerResponse } from "node:http";
+import type { OutgoingHttpHeaders, ServerResponse } from "node:http";
 
 export function sendJson(
   res: ServerResponse,
   statusCode: number,
-  data: unknown
+    data: unknown,
+    headers: OutgoingHttpHeaders = {}
 ): void {
-  res.writeHead(statusCode, {
-    'Content-Type': 'application/json; charset=utf-8',
-  });
+    try {
 
-  res.end(JSON.stringify(data));
+   
+        const body = JSON.stringify(data);
+    
+        res.writeHead(statusCode, {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Content-Length': Buffer.byteLength(body),
+            ...headers,
+        });
+  
+
+        res.end(body);
+    } catch (error) {
+        res.destroy();
+        return;
+    }
 }
