@@ -17,7 +17,7 @@ export function createApp() {
     sendJson(res, 200, [...notes.values()]);
   });
   router.get("/api/notes/:id", ({ res, params }) => {
-    const id = parseNoteId(params.id || '');
+    const id = parseNoteId(params.id || "");
     const note = notes.get(id);
 
     if (!note) {
@@ -51,7 +51,12 @@ export function createApp() {
     });
   });
   router.delete("/api/notes/:id", ({ res, params }) => {
-    const id = parseNoteId(params.id || '');
+    const id = parseNoteId(params.id || "");
+    const note = notes.get(id);
+
+    if (!note) {
+      throw new HttpError(404, "Заметка не найдена");
+    }
     notes.delete(id);
     res.writeHead(204);
     res.end();
@@ -63,7 +68,14 @@ export function createApp() {
       const url = new URL(req.url ?? "/", "http://localhost");
 
       const found = router.find(req.method ?? "GET", url.pathname);
-      console.log(found);
+      if (found && "handler" in found) {
+        await found.handler({ req, res, params: found.params, url });
+      } else if (found) {
+        res.setHeader("Allow", found.allowed.join(", "));
+        throw new HttpError(405, "Метод не поддерживается");
+      } else {
+        throw new HttpError(404, "Маршрут не найден");
+      }
     } catch (error) {
       if (error instanceof HttpError) {
         sendJson(res, error.statusCode, { error: error.message });
@@ -79,10 +91,10 @@ export function createApp() {
   });
 }
 
-
-function parseNoteId(id: string) {
-    if (!Number.isSafeInteger(id) || +id <= 0) {
-      throw new HttpError(400, "Некорректный ID");
-    }
-    return +id;
+function parseNoteId(raw: string | undefined): number {
+  const id = Number(raw);
+  if (!Number.isSafeInteger(id) || id <= 0) {
+    throw new HttpError(400, "Некорректный ID");
+  }
+  return id;
 }

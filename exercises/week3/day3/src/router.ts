@@ -24,7 +24,6 @@ export class Router {
 
     find(method: string, pathname: string): { handler: Handler; params: Params } | { allowed: string[] } | null {
         const allowed: string[] = [];
-        console.log(this.routes)
         for (const r of this.routes) {
             const params = matchPath(r.pattern, pathname);
             if (!params) continue;
