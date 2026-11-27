@@ -24,13 +24,12 @@ export class Router {
 
     find(method: string, pathname: string): { handler: Handler; params: Params } | { allowed: string[] } | null {
         const allowed: string[] = [];
+        console.log(this.routes)
         for (const r of this.routes) {
-            console.log(r.pattern)
             const params = matchPath(r.pattern, pathname);
             if (!params) continue;
             if (r.method === method) return { handler: r.handler, params };
             allowed.push(r.method);
-            console.log(r.method, r.pattern, params)
         }
         return allowed.length ? { allowed } : null;
     }

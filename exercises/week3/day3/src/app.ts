@@ -4,107 +4,85 @@ import { readJsonBody } from "./helpers/readJson.helper.ts";
 import { sendJson } from "./helpers/sendJson.helper.ts";
 import { HttpError } from "./httpError.ts";
 
-const notes = new Map<number, { id: number; text: string }>([
-  [1, { id: 1, text: 'Первая заметка' }],
-  [2, { id: 2, text: 'Вторая' }],
-]);
-let nextId = 3;
-
-
 export function createApp() {
-   // const router = new Router();
+  const router = new Router();
 
-    return createServer(async (req, res) => createServer(async (req, res) => {
-        const started = performance.now();
-        console.log(req.method)
-        try {
-            const url = new URL(req.url ?? '/', 'http://localhost');
-            switch (true) {
-                case req.method === 'GET' && url.pathname === '/api/notes': {
-                    sendJson(res, 200, [...notes.values()]);
-                    break;
-                }
+  const notes = new Map<number, { id: number; text: string }>([
+    [1, { id: 1, text: "Первая заметка" }],
+    [2, { id: 2, text: "Вторая" }],
+  ]);
+  let nextId = 3;
 
-                case req.method === 'GET' && /^\/api\/notes\/[^/]+$/.test(url.pathname): {
-                    const id = Number(url.pathname.split('/')[3]);
+  router.get("/api/notes", ({ res }) => {
+    sendJson(res, 200, [...notes.values()]);
+  });
+  router.get("/api/notes/:id", ({ res, params }) => {
+    const id = parseNoteId(params.id || '');
+    const note = notes.get(id);
 
-                    if (!Number.isSafeInteger(id) || id <= 0) {
-                        throw new HttpError(400, 'Некорректный ID');
-                    }
+    if (!note) {
+      throw new HttpError(404, "Заметка не найдена");
+    }
 
-                    const note = notes.get(id);
+    sendJson(res, 200, note);
+  });
+  router.post("/api/notes", async ({ req, res }) => {
+    const body = await readJsonBody(req);
 
-                    if (!note) {
-                        throw new HttpError(404, 'Заметка не найдена');
-                    }
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      !("text" in body) ||
+      typeof body.text !== "string" ||
+      !body.text.trim()
+    ) {
+      throw new HttpError(400, "Некорректное поле text");
+    }
 
-                    sendJson(res, 200, note);
-                    break;
-                }
+    const note = {
+      id: nextId++,
+      text: body.text.trim(),
+    };
 
-                case req.method === 'POST' && url.pathname === '/api/notes': {
-                    const body = await readJsonBody(req);
+    notes.set(note.id, note);
 
-                    if (
-                        typeof body !== 'object' ||
-                        body === null ||
-                        !('text' in body) ||
-                        typeof body.text !== 'string' ||
-                        !body.text.trim()
-                    ) {
-                        throw new HttpError(400, 'Некорректное поле text');
-                    }
+    sendJson(res, 201, note, {
+      Location: `/api/notes/${note.id}`,
+    });
+  });
+  router.delete("/api/notes/:id", ({ res, params }) => {
+    const id = parseNoteId(params.id || '');
+    notes.delete(id);
+    res.writeHead(204);
+    res.end();
+  });
 
-                    const note = {
-                        id: nextId++,
-                        text: body.text.trim(),
-                    };
+  return createServer(async (req, res) => {
+    const started = performance.now();
+    try {
+      const url = new URL(req.url ?? "/", "http://localhost");
 
-                    notes.set(note.id, note);
+      const found = router.find(req.method ?? "GET", url.pathname);
+      console.log(found);
+    } catch (error) {
+      if (error instanceof HttpError) {
+        sendJson(res, error.statusCode, { error: error.message });
+      } else {
+        console.error(error);
+        sendJson(res, 500, { error: "Внутренняя ошибка сервера" });
+      }
+    } finally {
+      console.log(
+        `${req.method} ${req.url} → ${res.statusCode} (${(performance.now() - started).toFixed(1)} ms)`,
+      );
+    }
+  });
+}
 
-                    sendJson(res, 201, note, {
-                        Location: `/api/notes/${note.id}`,
-                    });
-                    break;
-                }
-        
-                case (req.method === 'GET' && url.pathname === '/slow'): {
-                    const start = Date.now();
 
-                    while (Date.now() - start < 3000) {
-            
-                    }
-
-                    sendJson(res, 200, {
-                        message: 'Slow request completed',
-                    });
-
-                    break;
-                }
-
-                case (req.method === 'GET' && url.pathname === '/health'): {
-                    sendJson(res, 200, {
-                        status: 'ok',
-                    });
-
-                    break;
-                }
-
-                default:
-                    throw new HttpError(405, 'Маршрут не найден');
-            }
-    
-        } catch (error) {
-            if (error instanceof HttpError) {
-                sendJson(res, error.statusCode, { error: error.message });
-            } else {
-                console.error(error);
-                sendJson(res, 500, { error: 'Внутренняя ошибка сервера' });
-            }
-    
-        } finally {
-            console.log(`${req.method} ${req.url} → ${res.statusCode} (${(performance.now() - started).toFixed(1)} ms)`);
-        }
-    })
-)
+function parseNoteId(id: string) {
+    if (!Number.isSafeInteger(id) || +id <= 0) {
+      throw new HttpError(400, "Некорректный ID");
+    }
+    return +id;
 }
