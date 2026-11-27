@@ -12,10 +12,11 @@ let nextId = 3;
 
 
 export function createApp() {
-    const router = new Router();
+   // const router = new Router();
 
     return createServer(async (req, res) => createServer(async (req, res) => {
         const started = performance.now();
+        console.log(req.method)
         try {
             const url = new URL(req.url ?? '/', 'http://localhost');
             switch (true) {

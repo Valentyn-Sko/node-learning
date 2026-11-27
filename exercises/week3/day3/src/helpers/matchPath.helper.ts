@@ -1,3 +1,5 @@
+import type { Params } from "../router.ts";
+
 export function matchPath(pattern: string, pathname: string): Params | null {
   const p = pattern.split("/").filter(Boolean);
   const s = pathname.split("/").filter(Boolean);
