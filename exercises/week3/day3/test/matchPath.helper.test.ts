@@ -2,8 +2,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { HttpError } from '../httpError.ts';
-import { matchPath } from './matchPath.helper.ts';
+import { HttpError } from '../src/httpError.ts';
+import { matchPath } from '../src/helpers/matchPath.helper.ts';
 
 describe('matchPath', () => {
   it('должен вернуть пустой объект для совпадающего статического маршрута', () => {
