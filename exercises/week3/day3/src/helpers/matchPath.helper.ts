@@ -1,3 +1,4 @@
+import { HttpError } from "../httpError.ts";
 import type { Params } from "../router.ts";
 
 export function matchPath(pattern: string, pathname: string): Params | null {
@@ -8,7 +9,14 @@ export function matchPath(pattern: string, pathname: string): Params | null {
   for (let i = 0; i < p.length; i++) {
     const part = p[i]!;
     const value = s[i]!;
-    if (part.startsWith(":")) params[part.slice(1)] = decodeURIComponent(value);
+      if (part.startsWith(":")) {
+          try {
+              params[part.slice(1)] = decodeURIComponent(value);
+          } catch (error) {
+              throw new HttpError(400, 'Не корректный ID')
+          }
+          
+      }
     else if (part !== value) return null;
   }
   return params;
