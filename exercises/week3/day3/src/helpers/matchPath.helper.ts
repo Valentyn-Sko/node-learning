@@ -13,7 +13,7 @@ export function matchPath(pattern: string, pathname: string): Params | null {
           try {
               params[part.slice(1)] = decodeURIComponent(value);
           } catch (error) {
-              throw new HttpError(400, 'Не корректный ID')
+              throw new HttpError(400, 'Некорректная кодировка в URL')
           }
           
       }
