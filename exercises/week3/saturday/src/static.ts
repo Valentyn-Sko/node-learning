@@ -19,8 +19,14 @@ export async function serveStatic(
   res: ServerResponse,
 ) {
   const root = path.resolve(rootDir);
-  const decoded = decodeURIComponent(urlPath);
+  let decoded = "";
+  try {
+    decoded = decodeURIComponent(urlPath);
+  } catch (error) {
+    throw new HttpError(400, "Некорректная кодировка в URL");
+  }
   const relative = decoded === "/" ? "index.html" : decoded.slice(1);
+
   const filePath = path.resolve(root, relative);
   // ЗАЩИТА: итоговый путь обязан остаться внутри root
   if (filePath !== root && !filePath.startsWith(root + path.sep)) {

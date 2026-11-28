@@ -4,9 +4,10 @@ import type { AddressInfo } from "node:net";
 
 import { createApp } from "../src/app.ts";
 import { once } from "node:events";
+import path from "node:path";
 
 describe("HTTP API", () => {
-  const server = createApp();
+  const server = createApp({ publicDir: path.join(import.meta.dirname, '..', 'public') })
   let base: string;
 
   before(async () => {
