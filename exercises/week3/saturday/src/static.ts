@@ -29,7 +29,9 @@ export async function serveStatic(
 
   const filePath = path.resolve(root, relative);
   // ЗАЩИТА: итоговый путь обязан остаться внутри root
-
+  if (filePath !== root && !filePath.startsWith(root + path.sep)) {
+    throw new HttpError(403, "Доступ запрещён");
+  }
   let info;
   try {
     info = await stat(filePath);

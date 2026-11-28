@@ -7,7 +7,9 @@ import { once } from "node:events";
 import path from "node:path";
 
 describe("HTTP API", () => {
-  const server = createApp({ publicDir: path.join(import.meta.dirname, '..', 'public') })
+  const server = createApp({
+    publicDir: path.join(import.meta.dirname, "..", "public"),
+  });
   let base: string;
 
   before(async () => {
@@ -145,5 +147,10 @@ describe("HTTP API", () => {
     const check = await fetch(`${base}/api/notes/2`);
 
     assert.equal(check.status, 404);
+  });
+
+  it("path traversal через %2F → 403", async () => {
+    const res = await fetch(`${base}/..%2F..%2F..%2F..%2Fpackage.json`);
+    assert.equal(res.status, 403);
   });
 });
