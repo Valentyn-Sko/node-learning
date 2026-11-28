@@ -5,6 +5,10 @@ import { sendJson } from "./helpers/sendJson.helper.ts";
 import { HttpError } from "./httpError.ts";
 import { serveStatic } from "./static.ts";
 
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function createApp(options: { publicDir: string }) {
   const router = new Router();
 
@@ -16,6 +20,12 @@ export function createApp(options: { publicDir: string }) {
 
   router.get("/api/notes", ({ res }) => {
     sendJson(res, 200, [...notes.values()]);
+  });
+
+  router.get("/api/slow", async ({ res }) => {
+    await delay(5000);
+
+    sendJson(res, 200, { message: "Done" });
   });
   router.get("/api/notes/:id", ({ res, params }) => {
     const id = parseNoteId(params.id || "");
